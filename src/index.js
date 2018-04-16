@@ -60,18 +60,18 @@ exports.handler = (event, context, callback) => {
             regionTotal += cost;
             return {
               title: service,
-              value: `${cost.toFixed(2)} ${costUnit}`,
+              value: `${cost} ${costUnit}`,
               short: true
             }
           }),
-          title: `${region} (${regionTotal.toFixed(2)} USD)`,
+          title: `${region} (${regionTotal} USD)`,
           color: regionTotal > 0.0 ? 'good' : ''
         }
       });
 
       attachments.push({
         title: 'Total',
-        text: `${total.toFixed(2)} USD`,
+        text: `${total} USD`,
         color: 'danger'
       });
 
