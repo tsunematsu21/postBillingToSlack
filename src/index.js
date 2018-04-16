@@ -30,7 +30,7 @@ exports.handler = (event, context, callback) => {
   slack_req_opts.headers = {'Content-Type': 'application/json'};
     
   let billings = {};
-  let total    = 0;
+  let total    = parseFloat(0);
     
   costexplorer.getCostAndUsage(params, function (err, data) {
     if (err) {
@@ -52,12 +52,12 @@ exports.handler = (event, context, callback) => {
         if (b == 'NoRegion') return -1
         return a.localeCompare(b);
       }).map((region) => {
-        let regionTotal = 0;
+        let regionTotal = parseFloat(0);
         return {
           fields: Object.keys(billings[region]).sort().map((service) => {
-            let cost = parseFloat(billings[region][service].UnblendedCost.Amount);
-            let costUnit    = billings[region][service].UnblendedCost.Unit;
-            regionTotal += cost;
+            let cost     = billings[region][service].UnblendedCost.Amount
+            let costUnit = billings[region][service].UnblendedCost.Unit;
+            regionTotal += parseFloat(cost);
             return {
               title: service,
               value: `${cost} ${costUnit}`,
