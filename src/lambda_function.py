@@ -69,7 +69,7 @@ def lambda_handler(event, context):
   
   attachments.append({
     'title': 'Total',
-    'text': total_cost,
+    'text': '%s USD' % (total_cost),
     'color': 'danger'
   })
   
