@@ -13,6 +13,13 @@ Resources:
   CostReportTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      KeySchema:
+        -
+          AttributeName: id
+          KeyType: HASH
+        -
+          AttributeName: timestamp
+          KeyType: RANGE
       AttributeDefinitions:
         -
           AttributeName: id
