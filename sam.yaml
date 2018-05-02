@@ -1,36 +1,80 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Post Cost Explorer report to Slack
+
 Parameters:
   SlackWebhookUrl:
     Type: String
   ScheduleExpression:
     Type: String
     Default: "cron(0 0 * * ? *)"
+
 Resources:
-  postCostExplorerReportToSlack:
+  CostReportTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      GlobalSecondaryIndexes:
+        -
+          IndexName: gsi-timestamp
+          KeySchema:
+            AttributeName: timestamp
+            KeyType: HASH
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - region
+              - service
+              - cost
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+
+  putDailyCostReport:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: lambda_function.lambda_handler
-      Runtime: python3.6
-      CodeUri: ./src
-      Timeout: 10
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./src/putDailyCostReport
       Role: !GetAtt CostExplorerReportLambdaIAMRole.Arn
       Environment:
         Variables:
-          SLACK_WEBHOOK_URL: !Ref SlackWebhookUrl
+          TABLE_NAME: !Ref CostReportTable
       Events:
         ScheduleEvent:
           Type: Schedule
           Properties:
             Schedule: !Ref ScheduleExpression
+  # postCostExplorerReportToSlack:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: lambda_function.lambda_handler
+  #     Runtime: python3.6
+  #     CodeUri: ./src
+  #     Timeout: 10
+  #     Role: !GetAtt CostExplorerReportLambdaIAMRole.Arn
+  #     Environment:
+  #       Variables:
+  #         SLACK_WEBHOOK_URL: !Ref SlackWebhookUrl
+  #     Events:
+  #       ScheduleEvent:
+  #         Type: Schedule
+  #         Properties:
+  #           Schedule: !Ref ScheduleExpression
+
   CostExplorerReportLambdaIAMRole:
     Type: "AWS::IAM::Role"
     Properties:
       Path: "/"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-      Policies: 
+        - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+      Policies:
         - 
           PolicyName: "root"
           PolicyDocument: 
