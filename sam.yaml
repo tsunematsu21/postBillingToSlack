@@ -11,7 +11,7 @@ Parameters:
 
 Resources:
   CostReportTable:
-    Type: AWS::Serverless::SimpleTable
+    Type: AWS::DynamoDB::Table
     Properties:
       PrimaryKey:
         Name: id
