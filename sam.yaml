@@ -13,9 +13,13 @@ Resources:
   CostReportTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      PrimaryKey:
-        Name: id
-        Type: String
+      AttributeDefinition:
+        -
+          AttributeName: id
+          AttributeType: S
+        -
+          AttributeName: timestamp
+          AttributeType: N
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
