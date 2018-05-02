@@ -34,8 +34,9 @@ Resources:
         -
           IndexName: gsi-timestamp
           KeySchema:
-            AttributeName: timestamp
-            KeyType: HASH
+            -
+              AttributeName: timestamp
+              KeyType: HASH
           Projection:
             ProjectionType: INCLUDE
             NonKeyAttributes:
