@@ -1,8 +1,6 @@
-const aws            = require('aws-sdk');
-const costexplorer   = new aws.CostExplorer({ region: 'us-east-1' });
-const documentClient = new aws.DynamoDB.DocumentClient({
-  region: 'ap-northeast-1'
-});
+const AWS            = require('aws-sdk');
+const costExplorer   = new AWS.CostExplorer({ region: 'us-east-1' });
+const documentClient = new AWS.DynamoDB.DocumentClient({ region: process.env.DYNAMO_DB_REGION });
 
 exports.handler = (event, context, callback) => {
   const now       = new Date(new Date().setHours(0, 0, 0, 0));
@@ -26,7 +24,7 @@ exports.handler = (event, context, callback) => {
     },
   };
 
-  costexplorer.getCostAndUsage(params, function (err, data) {
+  costExplorer.getCostAndUsage(params, function (err, data) {
     console.log(JSON.stringify(data));
     
     if (err) {

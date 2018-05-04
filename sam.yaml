@@ -8,9 +8,19 @@ Parameters:
   ScheduleExpression:
     Type: String
     Default: "cron(0 0 * * ? *)"
+  StoreDailyCostScheduleExpression:
+    Type: String
+    Default: "cron(0 0 * * ? *)"
+  PostMonthlyCostReportScheduleExpression:
+    Type: String
+    Default: "cron(0 0 1 * ? *)"
+  DynamoDbRegion:
+    Type: String
+    Default: "ap-northeast-1"
 
 Resources:
-  CostReportTable:
+  ### DynamoDB Talbes ###
+  DailyCostTable:
     Type: AWS::DynamoDB::Table
     Properties:
       KeySchema:
@@ -47,21 +57,24 @@ Resources:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
 
-  putDailyCostReport:
+  ### Lambda functions ###
+  StoreDailyCost:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.handler
       Runtime: nodejs6.10
-      CodeUri: ./src/putDailyCostReport
-      Role: !GetAtt CostExplorerReportLambdaIAMRole.Arn
+      CodeUri: ./src/StoreDailyCost
+      Role: !GetAtt StoreDailyCostRole.Arn
       Environment:
         Variables:
-          TABLE_NAME: !Ref CostReportTable
+          TABLE_NAME: !Ref DailyCostTable
+          DYNAMO_DB_REGION: !Ref DynamoDbRegion
       Events:
         ScheduleEvent:
           Type: Schedule
           Properties:
-            Schedule: !Ref ScheduleExpression
+            Schedule: !Ref StoreDailyCostScheduleExpression
+
   # postCostExplorerReportToSlack:
   #   Type: AWS::Serverless::Function
   #   Properties:
@@ -79,13 +92,65 @@ Resources:
   #         Properties:
   #           Schedule: !Ref ScheduleExpression
 
-  CostExplorerReportLambdaIAMRole:
+  PostMonthlyCostReport:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./src/postMonthlyCostReport
+      Role: !GetAtt PostMonthlyCostReportRole.Arn
+      Environment:
+        Variables:
+          SLACK_WEBHOOK_URL: !Ref SlackWebhookUrl
+      Events:
+        ScheduleEvent:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref PostMonthlyCostReportScheduleExpression
+
+  ### IAM Roles ###
+  StoreDailyCostRole:
     Type: "AWS::IAM::Role"
     Properties:
       Path: "/"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
         - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action: 
+              - "sts:AssumeRole"
+            Principal:
+              Service: 
+                - "lambda.amazonaws.com"
+
+  PostDailyCostReportRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action: 
+              - "sts:AssumeRole"
+            Principal:
+              Service: 
+                - "lambda.amazonaws.com"
+
+  PostMonthlyCostReportRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
       Policies:
         - 
           PolicyName: "root"
