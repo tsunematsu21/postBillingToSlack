@@ -97,7 +97,7 @@ Resources:
     Properties:
       Handler: index.handler
       Runtime: nodejs6.10
-      CodeUri: ./src/postMonthlyCostReport
+      CodeUri: ./src/PostMonthlyCostReport
       Role: !GetAtt PostMonthlyCostReportRole.Arn
       Environment:
         Variables:
