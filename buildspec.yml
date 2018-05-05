@@ -4,6 +4,8 @@ phases:
     commands:
       - cd src/PostMonthlyCostReport
       - npm install --save
+      - cd ../PostDailyCostReport
+      - npm install --save
       - cd ../../
   build:
     commands:

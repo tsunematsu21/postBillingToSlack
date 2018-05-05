@@ -1,0 +1,10 @@
+{
+  "name": "postdailycostreport",
+  "version": "1.0.0",
+  "description": "Post daily cost report.",
+  "main": "index.js",
+  "dependencies": {
+    "decimal.js": "^10.0.0"
+  },
+  "devDependencies": {}
+}

@@ -5,18 +5,21 @@ Description: Post Cost Explorer report to Slack
 Parameters:
   SlackWebhookUrl:
     Type: String
-  ScheduleExpression:
-    Type: String
-    Default: "cron(0 0 * * ? *)"
   StoreDailyCostScheduleExpression:
     Type: String
     Default: "cron(0 0 * * ? *)"
+  PostDailyCostReportScheduleExpression:
+    Type: String
+    Default: "cron(30 0 * * ? *)"
   PostMonthlyCostReportScheduleExpression:
     Type: String
     Default: "cron(0 0 1 * ? *)"
   DynamoDbRegion:
     Type: String
     Default: "ap-northeast-1"
+  IndexName:
+    Type: String
+    Default: "timestamp-index"
 
 Resources:
   ### DynamoDB Talbes ###
@@ -42,7 +45,7 @@ Resources:
         WriteCapacityUnits: 1
       GlobalSecondaryIndexes:
         -
-          IndexName: gsi-timestamp
+          IndexName: !Ref IndexName
           KeySchema:
             -
               AttributeName: timestamp
@@ -64,6 +67,7 @@ Resources:
       Handler: index.handler
       Runtime: nodejs6.10
       CodeUri: ./src/StoreDailyCost
+      Timeout: 10
       Role: !GetAtt StoreDailyCostRole.Arn
       Environment:
         Variables:
@@ -75,22 +79,25 @@ Resources:
           Properties:
             Schedule: !Ref StoreDailyCostScheduleExpression
 
-  # postCostExplorerReportToSlack:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: lambda_function.lambda_handler
-  #     Runtime: python3.6
-  #     CodeUri: ./src
-  #     Timeout: 10
-  #     Role: !GetAtt CostExplorerReportLambdaIAMRole.Arn
-  #     Environment:
-  #       Variables:
-  #         SLACK_WEBHOOK_URL: !Ref SlackWebhookUrl
-  #     Events:
-  #       ScheduleEvent:
-  #         Type: Schedule
-  #         Properties:
-  #           Schedule: !Ref ScheduleExpression
+  PostDailyCostReport:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./src/PostDailyCostReport
+      Timeout: 10
+      Role: !GetAtt PostDailyCostReportRole.Arn
+      Environment:
+        Variables:
+          SLACK_WEBHOOK_URL: !Ref SlackWebhookUrl
+          TABLE_NAME: !Ref DailyCostTable
+          INDEX_NAME: !Ref IndexName
+          DYNAMO_DB_REGION: !Ref DynamoDbRegion
+      Events:
+        ScheduleEvent:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref PostDailyCostReportScheduleExpression
 
   PostMonthlyCostReport:
     Type: AWS::Serverless::Function
@@ -98,6 +105,7 @@ Resources:
       Handler: index.handler
       Runtime: nodejs6.10
       CodeUri: ./src/PostMonthlyCostReport
+      Timeout: 10
       Role: !GetAtt PostMonthlyCostReportRole.Arn
       Environment:
         Variables:
@@ -116,6 +124,17 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
         - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+      Policies:
+        - 
+          PolicyName: "root"
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement:
+              -  #Policy to allow CostExplorerAPI
+                Effect: "Allow"
+                Action:
+                  - ce:*
+                Resource: "*"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:

@@ -60,7 +60,7 @@ exports.handler = (event, context, callback) => {
           fields: Object.keys(billings[region]).sort().map((service) => {
             let cost     = billings[region][service].UnblendedCost.Amount
             let costUnit = billings[region][service].UnblendedCost.Unit;
-            regionTotal = regionTotal.plus(new Decimal(cost));
+            regionTotal  = regionTotal.plus(new Decimal(cost));
             return {
               title: service,
               value: `${cost} ${costUnit}`,

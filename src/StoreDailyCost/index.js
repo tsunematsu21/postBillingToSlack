@@ -5,10 +5,7 @@ const documentClient = new AWS.DynamoDB.DocumentClient({ region: process.env.DYN
 exports.handler = (event, context, callback) => {
   const now       = new Date(new Date().setHours(0, 0, 0, 0));
   const yesterday = new Date(new Date(new Date().setHours(0, 0, 0, 0)).setDate(now.getDate() - 1));
-  const startTime = `${yesterday.getFullYear()}-${('0'+ (yesterday.getMonth() + 1)).slice(-2)}-${('0'+ yesterday.getDate()).slice(-2)}`;
-  const endTime   = `${now.getFullYear()}-${('0'+ (now.getMonth() + 1)).slice(-2)}-${('0'+ now.getDate()).slice(-2)}`;
-  
-  const params = {
+  const params    = {
     Granularity: 'DAILY',
     Metrics: [ 'UnblendedCost' ],
     GroupBy: [{
@@ -19,8 +16,8 @@ exports.handler = (event, context, callback) => {
       Key:  'SERVICE',
     }],
     TimePeriod: {
-      Start: startTime,
-      End:   endTime,
+      Start: event.startTime ? event.startTime : toTimePeriodFormat(yesterday),
+      End:   event.endTime   ? event.endTime   : toTimePeriodFormat(now),
     },
   };
 
@@ -54,3 +51,7 @@ exports.handler = (event, context, callback) => {
     }
   });
 };
+
+function toTimePeriodFormat(date) {
+  return `${date.getFullYear()}-${('0'+ (date.getMonth() + 1)).slice(-2)}-${('0'+ date.getDate()).slice(-2)}`;
+}
