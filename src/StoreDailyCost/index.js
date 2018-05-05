@@ -3,8 +3,8 @@ const costExplorer   = new AWS.CostExplorer({ region: 'us-east-1' });
 const documentClient = new AWS.DynamoDB.DocumentClient({ region: process.env.DYNAMO_DB_REGION });
 
 exports.handler = (event, context, callback) => {
-  const now       = new Date(new Date().setHours(0, 0, 0, 0));
-  const yesterday = new Date(new Date(new Date().setHours(0, 0, 0, 0)).setDate(now.getDate() - 1));
+  const now       = event.endTime   ? new Date(event.endTime)   : new Date(new Date().setHours(0, 0, 0, 0));
+  const yesterday = event.startTime ? new Date(event.startTime) : new Date(new Date(new Date().setHours(0, 0, 0, 0)).setDate(now.getDate() - 1));
   const params    = {
     Granularity: 'DAILY',
     Metrics: [ 'UnblendedCost' ],
