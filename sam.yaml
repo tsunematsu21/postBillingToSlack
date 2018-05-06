@@ -166,7 +166,9 @@ Resources:
                 Effect: "Allow"
                 Action:
                   - dynamodb:Query
-                Resource: !GetAtt DailyCostTable.Arn
+                Resource: !Sub
+                  - "${tableArn}/index/*"
+                  - { tableArn: !GetAtt DailyCostTable.Arn }
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
