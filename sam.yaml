@@ -123,7 +123,6 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-        - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
       Policies:
         - 
           PolicyName: "root"
@@ -135,6 +134,11 @@ Resources:
                 Action:
                   - ce:*
                 Resource: "*"
+              -
+                Effect: "Allow"
+                Action:
+                  - dynamodb:PutItem
+                Resource: !GetAtt DailyCostTable.Arn
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -152,7 +156,17 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-        - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+      Policies:
+        - 
+          PolicyName: "root"
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - dynamodb:Query
+                Resource: !GetAtt DailyCostTable.Arn
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
